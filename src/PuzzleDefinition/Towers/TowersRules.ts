@@ -1,7 +1,7 @@
-import { range } from "../ArrayExtensions";
-import Point2d, { IPoint2d } from "../Point2d";
-import Tree from "../Tree";
-import IPuzzleRules from "./IPuzzleRules";
+import { range } from "../../ArrayExtensions";
+import Point2d, { IPoint2d } from "../../Point2d";
+import Tree from "../../Tree";
+import IPuzzleRules from "../IPuzzleRules";
 
 export default class TowersRules implements IPuzzleRules<number, ITowersViolation> {
     private eyes: {value: number, indecies: number[]}[];
