@@ -3,6 +3,7 @@ import IPuzzleRules from "../PuzzleDefinition/IPuzzleRules";
 import Tree from "../Tree";
 
 export default interface IUIPuzzleDefinition<TCell, TViolation> {
-    createPuzzleBuilder(): React.ComponentClass<{onFinished: (rules: IPuzzleRules<TCell, TViolation>, board: Tree<TCell[]>) => void}, any>;
-    createPuzzleView(): React.ComponentClass<{rules: IPuzzleRules<TCell, TViolation>, board: Tree<TCell[]>}, any>
+    name: string;
+    createPuzzleBuilder(): React.FC<{onFinished: (rules: IPuzzleRules<TCell, TViolation>, board: Tree<TCell[]>) => void}>;
+    createPuzzleView(): React.FC<{rules: IPuzzleRules<TCell, TViolation>, board: Tree<TCell[]>}>
 }

@@ -4,13 +4,15 @@ import Tree from '../../Tree';
 import IPuzzleRules from '../IPuzzleRules';
 import TowersRules, { ITowersViolation } from './TowersRules';
 import './PuzzleBuilder.css';
+import useResizeObserver from '@react-hook/resize-observer';
+import useSize from '../../Hooks/useSize';
 
 export default function PuzzleBuilderComponent(props: {onFinished: (rules: IPuzzleRules<number, ITowersViolation>, board: Tree<number[]>) => void}) {
     const [boardSize, setBoardSize] = React.useState(5);
     const [board, setBoard] = React.useState(new Tree<number[]>(range(0, boardSize * boardSize).map(() => range(1, boardSize))));
     
-    const [rowEyes, setRowEyes] = React.useState(range(0, boardSize).map(() => ({fwd: -1, rev: -1})));
-    const [colEyes, setColEyes] = React.useState(range(0, boardSize).map(() => ({fwd: -1, rev: -1})));
+    const [rowEyes, setRowEyes] = React.useState(range(0, boardSize).map(() => ({fwd: 0, rev: 0})));
+    const [colEyes, setColEyes] = React.useState(range(0, boardSize).map(() => ({fwd: 0, rev: 0})));
 
     function changeBoardSize(newSize: number) {
         setBoardSize(newSize);
@@ -68,56 +70,63 @@ export default function PuzzleBuilderComponent(props: {onFinished: (rules: IPuzz
         setBoard(newBoard);
     }
 
+    const boardResizeTarget = React.useRef<HTMLDivElement>(null);
+    const {width, height} = useSize(boardResizeTarget);
+    console.log(width, height);
+    const cellSize = Math.min(width, height) / (boardSize + 2);
+    const fixedSize = {
+        width: Math.floor(cellSize) + "px",
+        height: Math.floor(cellSize) + "px",
+    };
+
     return <div className='container'>
-        <div className='header-row'>
+        <div className='row header-row'>
 
         </div>
-        <div className='content-row'>
-            <div className='board'>
-                <EyeRowComponent eyes={colEyes} fwd={true} />
-                {range(0, boardSize).map(row => <BoardRowComponent key={row} row={row} boardSize={boardSize} board={board} rowEyes={rowEyes} />)}
-                <EyeRowComponent eyes={colEyes} fwd={false} />
-            </div>
+        <div className='row content-row' ref={boardResizeTarget}>
+            <table className='board' style={{ width: Math.min(width, height) + 'px'}}>
+                <EyeRowComponent eyes={colEyes} fwd={true} boardSize={boardSize} fixedSize={fixedSize} />
+                {range(0, boardSize).map(row => <BoardRowComponent key={row} row={row} boardSize={boardSize} board={board} rowEyes={rowEyes} fixedSize={fixedSize} />)}
+                <EyeRowComponent eyes={colEyes} fwd={false} boardSize={boardSize} fixedSize={fixedSize} />
+            </table>
         </div>
-        <div className='footer-row'>
+        <div className='row footer-row'>
             <button onClick={() => props.onFinished(getRules(), board)}>Solve</button>
         </div>
     </div> 
-    
-    
 }
 
-function EyeRowComponent(props: {eyes: {fwd: number, rev: number}[], fwd: boolean}) {
+function EyeRowComponent(props: {eyes: {fwd: number, rev: number}[], fwd: boolean, boardSize: number, fixedSize: {width: string, height: string}}) {
     const values = props.eyes.map(eye => props.fwd ? eye.fwd : eye.rev);
-    return <div className='board-row'>
-        <EyeCellComponent value={-1} />
-        {values.map((value, col) => <EyeCellComponent key={col} value={value} />)}
-        <EyeCellComponent value={-1} />
-    </div>
+    return <tr className='board-row' style={{verticalAlign: (props.fwd ? "bottom" : "top") }}>
+        <EyeCellComponent value={-1} fixedSize={props.fixedSize} />
+        {values.map((value, col) => <EyeCellComponent key={col} value={value} fixedSize={props.fixedSize} />)}
+        <EyeCellComponent value={-1} fixedSize={props.fixedSize} />
+    </tr>
 }
 
-function BoardRowComponent(props: {board: Tree<number[]>, boardSize: number, row: number, rowEyes: {fwd: number, rev: number}[]}) {
+function BoardRowComponent(props: {board: Tree<number[]>, boardSize: number, row: number, rowEyes: {fwd: number, rev: number}[], fixedSize: {width: string, height: string}}) {
     const eyes = props.rowEyes[props.row];
     const values = range(0, props.boardSize).map(col => props.board.get(props.row * props.boardSize + col));
-    return <div className='board-row'>
-        <EyeCellComponent value={eyes.fwd} />
-        {values.map((value, col) => <BoardCellComponent key={col} value={value} />)}
-        <EyeCellComponent value={eyes.rev} />
-    </div>
+    return <tr className='board-row'>
+        <EyeCellComponent value={eyes.fwd} fixedSize={props.fixedSize} />
+        {values.map((value, col) => <BoardCellComponent key={col} value={value} fixedSize={props.fixedSize} />)}
+        <EyeCellComponent value={eyes.rev} fixedSize={props.fixedSize} />
+    </tr>
 }
 
-function EyeCellComponent(props: {value: number}) {
+function EyeCellComponent(props: {value: number, fixedSize: {width: string, height: string}}) {
     if(props.value === -1) {
-        return <div className='eye-cell empty' />
+        return <td className='cell eye-cell' style={props.fixedSize}></td>
     }
-    return <div className="eye-cell">{props.value}</div>;
+    return <td className="cell eye-cell" style={props.fixedSize}>{props.value}</td>;
 }
 
-function BoardCellComponent(props: {value: number[]}) {
+function BoardCellComponent(props: {value: number[], fixedSize: {width: string, height: string}}) {
     if(props.value.length === 1) {
-        return <div className='board-cell board-value'>{props.value[0]}</div>
+        return <td className='cell board-cell board-value' style={props.fixedSize}>{props.value[0]}</td>
     }
     else {
-        return <div className='board-cell'>{props.value.map(v => <span key={v} className='board-possible-value'>{v}</span>)}</div>
+        return <td className='cell board-cell' style={props.fixedSize}>{props.value.map(v => <span key={v} className='board-possible-value'>{v}</span>)}</td>
     }
 }
