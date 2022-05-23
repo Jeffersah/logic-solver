@@ -32,7 +32,7 @@ export default class BTree<T> {
     }
 
     set(value: T) {
-        let result = this.root.add(value);
+        let result = this.root.set(value);
         switch(result.result){
             case 'nochange': return this;
             case 'added': return new BTree<T>(result.tree, this.count + 1);

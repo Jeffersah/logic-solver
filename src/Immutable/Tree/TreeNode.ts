@@ -58,8 +58,6 @@ export class TreeNode<T> implements ITreeNode<T>{
     }
 
     private handleSetAddResult(idx: number, innerResult: AddOrSetResult<T>): AddOrSetResult<T>{
-        console.log('ir');
-        console.log(innerResult);
         switch (innerResult.result) {
             case 'nochange': return innerResult;
             case 'added':

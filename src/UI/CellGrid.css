@@ -26,3 +26,8 @@
     font-weight: lighter;
     font-size: smaller;
 }
+.cell {
+    text-align: center;
+    vertical-align: middle;
+    user-select: none;
+}

@@ -16,6 +16,10 @@ export default class ImMap<TKey, TValue> {
         this.count = this.tree.count;
     }
 
+    public remove(key: TKey): ImMap<TKey, TValue> {
+        return new ImMap<TKey, TValue>(this.tree.remove({ key, value: (undefined as any) }));
+    }
+
     public get(key: TKey): TValue | undefined {
         let result = this.tree.get({ key, value: (undefined as any) });
         if(result === undefined) return undefined;

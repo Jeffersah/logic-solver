@@ -50,8 +50,11 @@ export class TreeLeaf<T> implements ITreeNode<T> {
     }
     set(value: T): AddOrSetResult<T> {
         let idx = this.keyIndex(value);
-        if (idx >= 0)
-            return { result: 'changed', tree: new TreeLeaf(this.maxKeyCount, this.values.slice().splice(idx, 1, value), this.comparer)};
+        if (idx >= 0){
+            const values = this.values.slice();
+            values.splice(idx, 1, value);
+            return { result: 'changed', tree: new TreeLeaf(this.maxKeyCount, values, this.comparer)};
+        }
         idx = ~idx;
         if (this.values.length < this.maxKeyCount) {
             // We can add it without splitting

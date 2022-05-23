@@ -9,11 +9,11 @@ export interface ICellGridComponentProps {
 }
 
 export interface IGridCellProps {
-    knownValue?: number;
+    knownValue?: string;
     highlight: boolean;
 
     error?: boolean
-    possible?: number[];
+    possible?: string[];
 
     displayBorder: boolean;
     borderThickness?: number[];
@@ -28,13 +28,15 @@ interface IGridCellPropsInner extends IGridCellProps {
 }
 
 export default function CellGridComponent(props: ICellGridComponentProps) {
+    let range:number[] = [];
+    for(let i = 0; i < props.grid.length; i++) { range.push(i); }
 
     return <table className="board">
         <tbody>
-            {props.grid.map((row, rowIndex) => 
-                <tr key={rowIndex}>
-                    {row.map((cell, colIndex) =>
-                        <CellComponent key={colIndex} x={colIndex} y={rowIndex} {...props} {...cell}  />
+            {range.map((row) => 
+                <tr key={row}>
+                    {range.map((col) =>
+                        <CellComponent key={col} x={col} y={row} {...props} {...props.grid[col][row]}  />
                     )}
                 </tr>
             )}
@@ -43,12 +45,19 @@ export default function CellGridComponent(props: ICellGridComponentProps) {
 }
 
 export function CellComponent(props: IGridCellPropsInner) {
-    let style = { width: props.sqSize + 'px', height: props.sqSize + 'px'};
+    let style: React.CSSProperties = { 
+        width: props.sqSize + 'px', 
+        height: props.sqSize + 'px', 
+        fontSize: (props.sqSize * (props.knownValue !== undefined ? 0.6 : 0.3)) + 'px' 
+    };
 
     let content = props.knownValue ? <>{props.knownValue}</> : props.possible ? <>{props.possible.map((v, i) => <span className='option' key={i}>{v}</span>)}</> : <></>
+    let borderThickenss = props.borderThickness === undefined ? '1px' : props.borderThickness.map(t => t + 'px').join(' ');
+
+    style.borderWidth = borderThickenss;
 
     return <td 
-        className={ClassFromObject({ cell: true, highlight: props.highlight, error: props.error ?? false, border: props.displayBorder })} 
+        className={ClassFromObject({ cell: true, highlight: props.highlight, error: props.error ?? false, border: props.displayBorder, knownValue: props.knownValue !== undefined })} 
         style={style}
         onClick={() => props.onClick ? props.onClick(props.x, props.y) : false}
         onMouseEnter={() => props.onHover ? props.onHover(props.x, props.y) : false}>
