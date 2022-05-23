@@ -21,10 +21,12 @@ export class TreeNode<T> implements ITreeNode<T>{
     }
 
     private split(valueIndex: number, newValue: T, newLeft: ITreeNode<T>, newRight: ITreeNode<T>) {
-        let allValues = this.values.slice().splice(valueIndex, 0, newValue);
-        let allChildren = this.children.slice().splice(valueIndex, 1, newLeft, newRight);
+        let allValues = this.values.slice();
+        allValues.splice(valueIndex, 0, newValue);
+        let allChildren = this.children.slice();
+        allChildren.splice(valueIndex, 1, newLeft, newRight);
 
-        let midIndex = allValues.length / 2;
+        let midIndex = Math.floor(allValues.length / 2);
 
         let midValue = allValues[midIndex];
         let leftValues = allValues.slice(0, midIndex);
@@ -41,20 +43,41 @@ export class TreeNode<T> implements ITreeNode<T>{
             return { result: 'nochange' }; // Duplicate value
         idx = ~idx;
         let innerResult = this.children[idx].add(value);
+        return this.handleSetAddResult(idx, innerResult);
+    }
+    set(value: T): AddOrSetResult<T> {
+        let idx = this.keyIndex(value);
+        if (idx >= 0) {
+            const newValues = this.values.slice();
+            newValues.splice(idx, 1, value);
+            return { result: 'changed', tree: this.newTree(newValues, this.children) };
+        }
+        idx = ~idx;
+        let innerResult = this.children[idx].set(value);
+        return this.handleSetAddResult(idx, innerResult);
+    }
+
+    private handleSetAddResult(idx: number, innerResult: AddOrSetResult<T>): AddOrSetResult<T>{
+        console.log('ir');
+        console.log(innerResult);
         switch (innerResult.result) {
             case 'nochange': return innerResult;
             case 'added':
             case 'changed':
+                const newChildren = this.children.slice();
+                newChildren.splice(idx, 1, innerResult.tree);
                 return {
                     result: innerResult.result,
-                    tree: this.newTree(this.values, this.children.slice().splice(idx, 1, innerResult.tree))
+                    tree: this.newTree(this.values, newChildren)
                 };
             case 'split':
                 let { value, left, right } = innerResult;
                 if (this.values.length < this.maxKeyCount) {
                     // We can add it without splitting
-                    let newValues = [...this.values].splice(idx, 0, value);
-                    let newChildren = [...this.children].splice(idx, 1, left, right);
+                    let newValues = [...this.values];
+                    newValues.splice(idx, 0, value);
+                    let newChildren = [...this.children];
+                    newChildren.splice(idx, 1, left, right);
                     return { result: 'added', tree: this.newTree(newValues, newChildren) };
                 }
                 else {
@@ -69,6 +92,12 @@ export class TreeNode<T> implements ITreeNode<T>{
         if (idx >= 0)
             return true;
         return this.children[~idx].has(value);
+    }
+    get(value: T): T|undefined {
+        let idx = this.keyIndex(value);
+        if (idx >= 0)
+            return this.values[idx];
+        return this.children[~idx].get(value);
     }
 
     max() {
@@ -102,9 +131,11 @@ export class TreeNode<T> implements ITreeNode<T>{
 
         let selfValues = this.values;
         if(spliceValue !== undefined) {
-            selfValues = selfValues.slice().splice(index, 1, spliceValue);
+            selfValues = selfValues.slice();
+            selfValues.splice(index, 1, spliceValue);
         }
-        let selfChildren = this.children.slice().splice(index, 1, result.tree);
+        let selfChildren = this.children.slice();
+        selfChildren.splice(index, 1, result.tree);
 
         if(!result.needMerge) {
             return {
@@ -174,7 +205,9 @@ export class TreeNode<T> implements ITreeNode<T>{
     }
 
     removeMax(): { result: 'removed', tree: ITreeNode<T>, value: T, needMerge: boolean } {
-        throw new Error("Method not implemented.");
+        let idx = this.values.length;
+        let innerResult = this.children[idx].removeMax();
+        return this.handleChildRemove(idx, innerResult.value, undefined, innerResult) as any;
     }
 
     prepend(value: T, orphan?: ITreeNode<T>){
@@ -196,5 +229,13 @@ export class TreeNode<T> implements ITreeNode<T>{
     tryGetSingleChild(): ITreeNode<T> | undefined {
         if(this.values.length === 0 && this.children.length === 1) return this.children[0];
         return undefined;
+    }
+    toArray(): T[] {
+        let arr = this.children[0].toArray();
+        for(let i = 1; i < this.children.length; i++){
+            arr.push(this.values[i-1]);
+            arr.push(...this.children[i].toArray());
+        }
+        return arr;
     }
 }

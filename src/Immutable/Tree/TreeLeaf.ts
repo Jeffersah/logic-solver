@@ -16,9 +16,10 @@ export class TreeLeaf<T> implements ITreeNode<T> {
     }
 
     private split(valueIndex: number, newValue: T) {
-        let allValues = this.values.slice().splice(valueIndex, 0, newValue);
+        let allValues = this.values.slice();
+        allValues.splice(valueIndex, 0, newValue);
 
-        let midIndex = allValues.length / 2;
+        let midIndex = Math.floor(allValues.length / 2);
 
         let midValue = allValues[midIndex];
         let leftValues = allValues.slice(0, midIndex);
@@ -38,7 +39,8 @@ export class TreeLeaf<T> implements ITreeNode<T> {
         idx = ~idx;
         if (this.values.length < this.maxKeyCount) {
             // We can add it without splitting
-            let newValues = [...this.values].splice(idx, 0, value);
+            let newValues = [...this.values];
+            newValues.splice(idx, 0, value);
             return { result: 'added', tree: new TreeLeaf(this.maxKeyCount, newValues, this.comparer) };
         }
         else {
@@ -46,8 +48,30 @@ export class TreeLeaf<T> implements ITreeNode<T> {
             return { result: 'split', ...this.split(idx, value) };
         }
     }
+    set(value: T): AddOrSetResult<T> {
+        let idx = this.keyIndex(value);
+        if (idx >= 0)
+            return { result: 'changed', tree: new TreeLeaf(this.maxKeyCount, this.values.slice().splice(idx, 1, value), this.comparer)};
+        idx = ~idx;
+        if (this.values.length < this.maxKeyCount) {
+            // We can add it without splitting
+            let newValues = [...this.values];
+            newValues.splice(idx, 0, value);
+            return { result: 'added', tree: new TreeLeaf(this.maxKeyCount, newValues, this.comparer) };
+        }
+        else {
+            // We need to split
+            return { result: 'split', ...this.split(idx, value) };
+        }
+    }
+
     has(value: T): boolean {
         return this.keyIndex(value) >= 0;
+    }
+    get(value: T): T|undefined {
+        let idx = this.keyIndex(value);
+        if(idx >= 0) return this.values[idx];
+        return undefined;
     }
     max(): T {
         return this.values[this.values.length - 1];
@@ -77,7 +101,8 @@ export class TreeLeaf<T> implements ITreeNode<T> {
     remove(value: T): RemoveResult<T> {
         const idx = this.keyIndex(value);
         if(idx < 0) return {result: 'nochange'};
-        const newValues = [...this.values].splice(idx, 1);
+        const newValues = [...this.values];
+        newValues.splice(idx, 1);
         return {
             result: 'removed',
             tree: new TreeLeaf(this.maxKeyCount, newValues, this.comparer),
@@ -108,5 +133,9 @@ export class TreeLeaf<T> implements ITreeNode<T> {
     }
     tryGetSingleChild(): ITreeNode<T> | undefined {
         return undefined;
+    }
+
+    toArray(): T[] {
+        return this.values;
     }
 }

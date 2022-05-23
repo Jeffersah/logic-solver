@@ -5,6 +5,7 @@ import towers from './PuzzleDefinition/Towers'
 import IUIPuzzleDefinition from './UI/IUIPuzzleDefinition';
 import IPuzzleRules from './PuzzleDefinition/IPuzzleRules';
 import Tree from './Tree';
+import TreeTestComponent from './UI/TreeTestComponent';
 
 const allPuzzleBuilders: IUIPuzzleDefinition<any, any>[] = [
   towers
@@ -43,6 +44,8 @@ function App() {
     content = <div>Select a puzzle type</div>
   }
 
+  //tmp:
+  return <TreeTestComponent />
 
   return (
     <div className="App">

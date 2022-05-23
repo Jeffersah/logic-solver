@@ -16,8 +16,22 @@ export default class BTree<T> {
     has(value: T): boolean {
         return this.root.has(value);
     }
+    get(value: T): T|undefined {
+        return this.root.get(value);
+    }
 
     add(value: T) {
+        let result = this.root.add(value);
+        console.log(result);
+        switch(result.result){
+            case 'nochange': return this;
+            case 'added': return new BTree<T>(result.tree, this.count + 1);
+            case 'changed': return new BTree<T>(result.tree, this.count);
+            case 'split': return new BTree<T>(new TreeNode<T>(MAX_TREE_KEY_COUNT, [result.value], [ result.left, result.right ], this.root.comparer), this.count + 1);
+        }
+    }
+
+    set(value: T) {
         let result = this.root.add(value);
         switch(result.result){
             case 'nochange': return this;
@@ -36,6 +50,10 @@ export default class BTree<T> {
         }
         return new BTree<T>(result.tree, this.count - 1);
     }
+
+    toArray(): T[] {
+        return this.root.toArray();
+    }
 }
 
 export interface ITreeNode<T> {
@@ -45,9 +63,11 @@ export interface ITreeNode<T> {
     values: T[];
 
     add(value: T): AddOrSetResult<T>;
+    set(value: T): AddOrSetResult<T>;
     remove(value: T): RemoveResult<T>;
     removeMax(): { result: 'removed', tree: ITreeNode<T>, value: T, needMerge: boolean };
     has(value: T): boolean;
+    get(value: T): T|undefined;
 
     max(): T;
     min(): T;
@@ -62,6 +82,8 @@ export interface ITreeNode<T> {
     merge(divider: T, other: ITreeNode<T>): ITreeNode<T>;
 
     tryGetSingleChild(): ITreeNode<T> | undefined;
+
+    toArray(): T[];
 }
 
 export type AddOrSetResult<T> = 
