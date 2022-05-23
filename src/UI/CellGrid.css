@@ -1,0 +1,28 @@
+.board {
+    border-collapse: collapse;
+    padding: 0;
+    margin: 0;
+    border-spacing: 0;
+}
+
+.cell.border {
+    background-color: #ddd;
+    border: 1px solid #222;
+}
+
+.cell.border.highlight {
+    background-color: #fed;
+}
+
+.cell.error {
+    color: #f00;
+}
+.cell.border.error {
+    background-color: #f88;
+}
+
+.cell .option {
+    color: #00c;
+    font-weight: lighter;
+    font-size: smaller;
+}
